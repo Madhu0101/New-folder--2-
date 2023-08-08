@@ -1,13 +1,31 @@
-var express = require("express");
-var cors = require("cors");
-var app = express();
+import express from "express"; // module type
+import { MongoClient } from "mongodb";
+import cors from "cors";
 
+var app = express();
 app.use(cors());
+app.use(express.json());
 
 const PORT = 4000;
-// app.get("/", function (request, response) {
-//   response.send("🙋‍♂️, 🌏 🎊✨🤩");
-// });
+app.get("/", function (request, response) {
+  response.send("🙋‍♂️, 🌏 🎊✨🤩");
+});
+
+const movies = await client.db("hurix").collection("movies").find({}).toArray();
+console.log(movies);
+response.send(movies);
+
+const MONGO_URL = "mongodb://127.0.0.1"; //  nodejs - 16+
+
+// Node - MongoDB
+async function createConnection() {
+  const client = new MongoClient(MONGO_URL);
+  await client.connect();
+  console.log("Mongo is connected ✌😊");
+  return client;
+}
+
+const client = await createConnection();
 const movies = [
   {
     id: "99",
@@ -119,14 +137,24 @@ const movies = [
   },
 ];
 
-// app.get("/movies", function (request, response) {
-//     response.send(movies);
-//   });
+app.get("/movies", function (request, response) {
+  response.send(movies);
+});
 
-app.get("/movies/:id", function (request, response) {
-  const { id } = request.params;
+app.get("/movies/:id", async function (request, response) {
+  const { id } = request.params; // const movie = movie.find((mv) => mv.id === id); //  response.send(movie);
+  const movie = await client
+    .db("hurix")
+    .collection("movies")
+    .findOne({ id: id });
 
-  const movie = movies.filter((s) => s.id === id);
   response.send(movie);
+});
+app.post("/movies", express.json(), async function (request, response) {
+  const data = request.body;
+  console.log(data);
+  const result = await client.db("hurix").collection("movies").insertMany(data);
+  //   const movie = movies.filter((s) => s.id === id);
+  response.send(result);
 });
 app.listen(PORT, () => console.log(`The server started in: ${PORT} ✨✨`));
